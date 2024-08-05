@@ -1,60 +1,67 @@
+import asyncio
 import logging
 import os
 from datetime import datetime
 
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from dotenv import load_dotenv
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from db.dals import get_reminders_after_date, save_reminder, set_reminder_sent
-from db.session import async_session
+import commands
+from db.dals import get_reminders_after_date, set_reminder_sent
+from middlewares import DbSessionMiddleware
 from scheduler import scheduler
-from utils import (
-    ValidationError,
-    get_message_history,
-    get_previous_user_message,
-    parse_validate_reminder_command,
-)
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger("main")
+
 load_dotenv(".env")
-
 TG_API_TOKEN = os.environ.get("TG_API_TOKEN")
-bot = Bot(token=TG_API_TOKEN)
-dp = Dispatcher(bot)
+DB_URL = os.environ.get("DB_URL")
 
-
-@dp.message_handler(commands=["ctrl"])
-async def remind(message: types.Message):
-    try:
-        reminder_date = parse_validate_reminder_command(message.text)
-    except ValidationError:
-        await message.reply(
-            "Пожалуйста, введите дату напоминания в формате 10h, 5d, 1w, 12m "
-            "(не более чем на 10 лет вперед)."
-        )
-
-    history = await get_message_history(TG_API_TOKEN, message.chat.id)
-    message = get_previous_user_message(
-        history["result"], message.message_id, message.from_user.id
-    )
-    await save_reminder(async_session, message, reminder_date)
+bot = None
 
 
 async def send_reminders():
-    reminders = get_reminders_after_date(
-        async_session, datetime.now(datetime.UTC)
-    )
-    for reminder in reminders:
-        message = await bot.send_message(
-            reminder.tg_chat_id,
-            reminder.text,
-            reply_to_message_id=reminder.tg_message_id,
+    log.debug("send_reminders()")
+    async with async_sessionmaker(create_async_engine(DB_URL))() as session:
+        log.debug("Sending reminders...")
+        reminders = await get_reminders_after_date(
+            session, datetime.now(datetime.UTC)
         )
-        if message:
-            set_reminder_sent(async_session, reminder)
+        for reminder in reminders:
+            log.debug("Sending reminder[%s]", reminder.id)
+            message = await bot.send_message(
+                reminder.tg_chat_id,
+                reminder.text,
+                reply_to_message_id=reminder.tg_message_id,
+            )
+            if message:
+                await set_reminder_sent(session, reminder)
+        log.info("Sent %s reminder(s)", len(reminders))
+
+
+async def start_scheduler():
+    # job = scheduler.add_job(send_reminders, "interval", minutes=1)
+    job = scheduler.add_job(send_reminders, "interval", seconds=10)
+    scheduler.start()
+
+
+async def main():
+    engine = create_async_engine(url=DB_URL, echo=True)
+    sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
+
+    global bot
+    bot = Bot(TG_API_TOKEN)
+
+    dp = Dispatcher()
+    dp.update.middleware(DbSessionMiddleware(session_pool=sessionmaker))
+    dp.include_router(commands.router)
+
+    asyncio.create_task(start_scheduler())
+
+    await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
 
 if __name__ == "__main__":
-    # executor.start_polling(dp, skip_updates=True)
-    dp.start_polling(dp, skip_updates=True)
-    job = scheduler.add_job(send_reminders, "interval", minutes=1)
+    asyncio.run(main())
