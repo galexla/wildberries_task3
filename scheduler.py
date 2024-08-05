@@ -12,7 +12,7 @@ scheduler = AsyncIOScheduler(
 )
 
 
-def initialize_scheduler(db_url: str):
+def initialize_scheduler():
     jobstores = {
         "default": MemoryJobStore(),
     }

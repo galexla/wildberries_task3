@@ -18,7 +18,6 @@ log = logging.getLogger("main")
 load_dotenv(".env")
 TG_API_TOKEN = os.environ.get("TG_API_TOKEN")
 DB_URL = os.environ.get("DB_URL")
-SYNC_DB_URL = os.environ.get("SYNC_DB_URL")
 
 bot = None
 
@@ -52,7 +51,7 @@ async def main():
     dp.update.middleware(DbSessionMiddleware(session_pool=sessionmaker))
     dp.include_router(commands.router)
 
-    initialize_scheduler(SYNC_DB_URL)
+    initialize_scheduler()
     job_id = "send_reminders_job"
     if not scheduler.get_job(job_id):
         scheduler.add_job(send_reminders, "interval", seconds=10, id=job_id)
