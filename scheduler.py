@@ -1,8 +1,7 @@
 from apscheduler.executors.pool import ThreadPoolExecutor
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pytz import utc
-from sqlalchemy import create_engine
 
 executors = {"default": ThreadPoolExecutor(1)}
 
@@ -14,7 +13,8 @@ scheduler = AsyncIOScheduler(
 
 
 def initialize_scheduler(db_url: str):
-    sync_engine = create_engine(db_url, future=True)
-    jobstores = {"default": SQLAlchemyJobStore(engine=sync_engine)}
+    jobstores = {
+        "default": MemoryJobStore(),
+    }
     scheduler.configure(jobstores=jobstores)
     scheduler.start()
