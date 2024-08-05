@@ -51,7 +51,7 @@ async def main():
     dp.update.middleware(DbSessionMiddleware(session_pool=sessionmaker))
     dp.include_router(commands.router)
 
-    initialize_scheduler(DB_URL)
+    await initialize_scheduler(DB_URL)
     scheduler.add_job(
         lambda: run_async_job(send_reminders), "interval", seconds=10
     )
