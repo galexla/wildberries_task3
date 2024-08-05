@@ -12,7 +12,7 @@ from db.dals import get_reminders_after_date, set_reminder_sent
 from middlewares import DbSessionMiddleware
 from scheduler import initialize_scheduler, scheduler
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("main")
 
 load_dotenv(".env")
@@ -53,7 +53,9 @@ async def main():
     dp.include_router(commands.router)
 
     initialize_scheduler(SYNC_DB_URL)
-    scheduler.add_job(send_reminders, "interval", seconds=10)
+    job_id = "send_reminders_job"
+    if not scheduler.get_job(job_id):
+        scheduler.add_job(send_reminders, "interval", seconds=10, id=job_id)
 
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 

@@ -1,5 +1,3 @@
-import asyncio
-
 from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -20,8 +18,3 @@ def initialize_scheduler(db_url: str):
     jobstores = {"default": SQLAlchemyJobStore(engine=sync_engine)}
     scheduler.configure(jobstores=jobstores)
     scheduler.start()
-
-
-def run_async_job(coroutine_func):
-    loop = asyncio.get_event_loop()
-    loop.create_task(coroutine_func)
