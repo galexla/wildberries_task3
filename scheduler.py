@@ -1,11 +1,13 @@
-from apscheduler.executors.pool import ProcessPoolExecutor
+import asyncio
+
+from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pytz import utc
 from sqlalchemy import create_engine
 
 jobstores = {}
-executors = {"default": ProcessPoolExecutor(2)}
+executors = {"default": ThreadPoolExecutor(1)}
 job_defaults = {
     "coalesce": True,
 }
@@ -26,3 +28,8 @@ def initialize_scheduler(db_url: str):
         timezone=utc,
     )
     scheduler.start()
+
+
+def run_async_job(coroutine_func):
+    loop = asyncio.get_event_loop()
+    loop.create_task(coroutine_func)
