@@ -7,25 +7,18 @@ from pytz import utc
 from sqlalchemy import create_engine
 
 executors = {"default": ThreadPoolExecutor(1)}
-job_defaults = {
-    "coalesce": True,
-}
+
+job_defaults = {"coalesce": True}
+
 scheduler = AsyncIOScheduler(
-    executors=executors,
-    job_defaults=job_defaults,
-    timezone=utc,
+    executors=executors, job_defaults=job_defaults, timezone=utc
 )
 
 
-async def initialize_scheduler(db_url: str):
-    sync_engine = create_engine(db_url)
+def initialize_scheduler(db_url: str):
+    sync_engine = create_engine(db_url, future=True)
     jobstores = {"default": SQLAlchemyJobStore(engine=sync_engine)}
-    scheduler.configure(
-        jobstores=jobstores,
-        executors=executors,
-        job_defaults=job_defaults,
-        timezone=utc,
-    )
+    scheduler.configure(jobstores=jobstores)
     scheduler.start()
 
 
