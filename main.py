@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 import commands
 import config
-from db.dals import get_reminders_after_date, set_reminder_sent
+from db.dals import get_reminders_before_date, set_reminder_sent
 from middlewares import DbSessionMiddleware
 from scheduler import initialize_scheduler, scheduler
 
@@ -22,7 +22,7 @@ async def send_reminders():
         create_async_engine(config.DB_URL)
     )() as session:
         log.debug("Sending reminders...")
-        reminders = await get_reminders_after_date(
+        reminders = await get_reminders_before_date(
             session, datetime.now(timezone.utc)
         )
         for reminder in reminders:

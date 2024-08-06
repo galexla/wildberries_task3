@@ -8,13 +8,13 @@ from db.models import LastMessage, Reminder
 
 
 async def save_reminder(
-    session: AsyncSession, message: types.Message, reminder_date: datetime
+    session: AsyncSession, message: LastMessage, reminder_date: datetime
 ):
     async with session:
         instance = Reminder(
-            tg_message_id=message.message_id,
-            tg_chat_id=message.chat.id,
-            tg_user_id=message.from_user.id,
+            tg_message_id=message.tg_message_id,
+            tg_chat_id=message.tg_chat_id,
+            tg_user_id=message.tg_user_id,
             text=message.text,
             remind_at=reminder_date,
         )
@@ -22,9 +22,9 @@ async def save_reminder(
         await session.commit()
 
 
-async def get_reminders_after_date(session: AsyncSession, date: datetime):
+async def get_reminders_before_date(session: AsyncSession, date: datetime):
     stmt = select(Reminder).where(
-        Reminder.remind_at >= date, Reminder.is_sent == False
+        Reminder.remind_at <= date, Reminder.is_sent == False
     )
     result = await session.execute(stmt)
     reminders = result.scalars().all()
@@ -73,3 +73,17 @@ async def add_message_keep_last_two(
         await session.execute(stmt)
 
         await session.commit()
+
+
+async def get_last_user_message(session: AsyncSession, chat_id, user_id):
+    stmt = (
+        select(LastMessage)
+        .where(
+            LastMessage.tg_chat_id == chat_id,
+            LastMessage.tg_user_id == user_id,
+        )
+        .order_by(LastMessage.id.desc())
+    )
+    result = await session.execute(stmt)
+    message = result.scalars().first()
+    return message

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.dals import (
     add_message_keep_last_two,
-    get_reminders_after_date,
+    get_reminders_before_date,
     save_reminder,
     set_reminder_sent,
 )
@@ -42,7 +42,7 @@ async def test_save_reminder(db_session: AsyncSession):
 
 async def test_get_reminders_after_date(db_session: AsyncSession):
     date = datetime.fromisoformat("2024-08-04 21:00:00")
-    reminders = await get_reminders_after_date(db_session, date)
+    reminders = await get_reminders_before_date(db_session, date)
     assert len(reminders) == 2
     assert reminders[0].id == 2
     assert reminders[0].remind_at == datetime.fromisoformat(

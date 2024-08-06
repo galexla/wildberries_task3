@@ -6,13 +6,15 @@ from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import config
-from db.dals import add_message_keep_last_two, save_reminder
+from db.dals import (
+    add_message_keep_last_two,
+    get_last_user_message,
+    save_reminder,
+)
 from utils import (
     ValidationError,
     get_bot_command,
-    get_message_history,
     get_period_name,
-    get_previous_user_message,
     parse_validate_reminder_command,
 )
 
@@ -60,21 +62,18 @@ async def cmd_remind(message: Message, session: AsyncSession):
         )
         return
 
-    response = await get_message_history(config.TG_API_TOKEN, message.chat.id)
-    if not response["ok"]:
-        await message.reply(
-            "Some error occured. You may be in a private chat. Please add "
-            "this bot to a public chat."
+    last_message = await get_last_user_message(
+        session, message.chat.id, message.from_user.id
+    )
+    if last_message is None:
+        await last_message.reply(
+            "No previous messages of current user in this chat were found."
         )
         return
-
-    message = get_previous_user_message(
-        response["result"], message.message_id, message.from_user.id
-    )
-    await save_reminder(session, message, reminder_date)
+    await save_reminder(session, last_message, reminder_date)
     await message.reply(
         "#Task# is accepted. I will remind you about it after "
-        f"{number} {period_name}"
+        f"{number} {period_name}."
     )
 
 
