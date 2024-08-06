@@ -4,9 +4,13 @@ from unittest.mock import MagicMock
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.dals import (add_message_keep_last_two, get_last_user_message,
-                     get_reminders_before_date, save_reminder,
-                     set_reminder_sent)
+from db.dals import (
+    add_message_keep_last_two,
+    get_last_user_message,
+    get_reminders_before_date,
+    save_reminder,
+    set_reminder_sent,
+)
 from db.models import LastMessage, Reminder
 
 
@@ -100,23 +104,11 @@ async def test_add_message_keep_last_two(db_session: AsyncSession):
         assert texts == elem["expected"]["texts"]
 
 
-# def test_get_last_user_message():
-#     messages = [
-#         {"message": {"id": 0, "from": {"id": 1}}},
-#         {"message": {"id": 1, "from": {"id": 1}}},
-#         {"message": {"id": 2, "from": {"id": 1}}},
-#         {"message": {"id": 3, "from": {"id": 1}}},
-#         {"message": {"id": 4, "from": {"id": 2}}},
-#         {"message": {"id": 5, "from": {"id": 3}}},
-#     ]
-#     message = get_last_user_message(messages, 2, 1)
-#     assert message["message"]["id"] == 1
+async def test_get_last_user_message(db_session: AsyncSession):
+    message = await get_last_user_message(db_session, 1, 123)
+    assert message.id == 5
+    assert message.text == "text5"
 
-#     message = get_last_user_message(messages, 1, 1)
-#     assert message["message"]["id"] == 0
-
-#     message = get_last_user_message(messages, 0, 1)
-#     assert message is None
-
-#     message = get_last_user_message(messages, 5, 3)
-#     assert message is None
+    message = await get_last_user_message(db_session, 1, 125)
+    assert message.id == 3
+    assert message.text == "text3"
