@@ -53,6 +53,11 @@ def get_period_name(period: str) -> str:
     return mapping[period]
 
 
+def get_period_name_ru(period: str) -> str:
+    mapping = {"h": "часов", "d": "дней", "w": "недель", "m": "месяцев"}
+    return mapping[period]
+
+
 def calc_reminder_date(date: datetime, number: int, period: str) -> datetime:
     period_name = get_period_name(period)
     kwargs = {period_name: number}

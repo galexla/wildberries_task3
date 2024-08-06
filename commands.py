@@ -14,7 +14,7 @@ from db.dals import (
 from utils import (
     ValidationError,
     get_bot_command,
-    get_period_name,
+    get_period_name_ru,
     parse_validate_reminder_command,
 )
 
@@ -40,9 +40,10 @@ class CommandFilter(Filter):
 async def cmd_start(message: Message):
     log.debug("cmd_start()")
     await message.answer(
-        "Hi there! This is a simple reminder bot. Add it to a chat, post a "
-        "message and send /ctrl 5d to post your message again 5 days later.\n"
-        "Other period types: h (hour), d (day), w (week), m (month)."
+        "Привет! Это простой бот-напоминалка. Добавьте его в чат. Отправьте "
+        "любое сообщение и затем команду /ctrl 5d - бот перепостит это "
+        "сообщение 5 дней спустя.\n"
+        "Вот все виды периодов: h (часы), d (дни), w (недели), m (месяцы)."
     )
 
 
@@ -54,11 +55,11 @@ async def cmd_remind(message: Message, session: AsyncSession):
         reminder_date, number, period = parse_validate_reminder_command(
             command
         )
-        period_name = get_period_name(period)
+        period_name = get_period_name_ru(period)
     except ValidationError:
         await message.reply(
-            "Please enter reminder date in format 10h, 5d, 1w, 12m "
-            "(no more than 10 years in total)."
+            "Пожалуйста, введите дату напоминания в формате 10h, 5d, 1w, 12m "
+            "(но в сумме не более 10 лет)."
         )
         return
 
@@ -67,13 +68,12 @@ async def cmd_remind(message: Message, session: AsyncSession):
     )
     if last_message is None:
         await last_message.reply(
-            "No previous messages of current user in this chat were found."
+            "Предыдущих сообщений пользователя не найдено."
         )
         return
     await save_reminder(session, last_message, reminder_date)
     await message.reply(
-        "#Task# is accepted. I will remind you about it after "
-        f"{number} {period_name}."
+        f"#Задача# принята. Напомню о ней через {number} {period_name}."
     )
 
 
