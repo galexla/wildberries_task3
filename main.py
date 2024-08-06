@@ -1,13 +1,12 @@
 import asyncio
 import logging
-import os
 from datetime import datetime, timezone
 
-from aiogram import Bot, Dispatcher
-from dotenv import load_dotenv
+from aiogram import Bot, Dispatcher, types
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 import commands
+import config
 from db.dals import get_reminders_after_date, set_reminder_sent
 from middlewares import DbSessionMiddleware
 from scheduler import initialize_scheduler, scheduler
@@ -15,15 +14,13 @@ from scheduler import initialize_scheduler, scheduler
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("main")
 
-load_dotenv(".env")
-TG_API_TOKEN = os.environ.get("TG_API_TOKEN")
-DB_URL = os.environ.get("DB_URL")
-
 bot = None
 
 
 async def send_reminders():
-    async with async_sessionmaker(create_async_engine(DB_URL))() as session:
+    async with async_sessionmaker(
+        create_async_engine(config.DB_URL)
+    )() as session:
         log.debug("Sending reminders...")
         reminders = await get_reminders_after_date(
             session, datetime.now(timezone.utc)
@@ -42,19 +39,27 @@ async def send_reminders():
 
 async def main():
     global bot
-    bot = Bot(TG_API_TOKEN)
+    bot = Bot(config.TG_API_TOKEN)
+    # bot_username = (await bot.get_me()).username
 
-    engine = create_async_engine(DB_URL, echo=True)
+    engine = create_async_engine(config.DB_URL, echo=True)
     sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
 
     dp = Dispatcher()
     dp.update.middleware(DbSessionMiddleware(session_pool=sessionmaker))
+    # dp.update.middleware(StripMentionMiddleware(bot_username))
     dp.include_router(commands.router)
 
     initialize_scheduler()
     job_id = "send_reminders_job"
     if not scheduler.get_job(job_id):
         scheduler.add_job(send_reminders, "interval", seconds=10, id=job_id)
+
+    # @dp.message()
+    # async def handle_message(message: types.Message):
+    #     log.info(
+    #         f"Received message: {message.text} from {message.from_user.id}"
+    #     )
 
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
