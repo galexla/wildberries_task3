@@ -21,7 +21,7 @@ def convert_dates(data):
 
 @pytest.fixture(scope="session")
 async def db_engine():
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=True)
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")  # , echo=True
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     return engine

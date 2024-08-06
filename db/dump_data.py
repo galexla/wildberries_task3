@@ -2,14 +2,15 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from models import Reminder
+from models import LastMessage, Reminder
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-table_names_to_dump = ["reminder"]
-model_classes = {
+model_classes_to_dump = {
     "reminder": Reminder,
+    "last_message": LastMessage,
 }
+table_names_to_dump = list(model_classes_to_dump.keys())
 out_file_name = "fixtures.json"
 
 path = str(Path(__file__).parent.parent / "db.sqlite")
@@ -39,7 +40,7 @@ def serialize_table(model):
 tables_data = {}
 
 for table_name in table_names_to_dump:
-    model_class = model_classes.get(table_name)
+    model_class = model_classes_to_dump.get(table_name)
     if model_class is not None:
         tables_data[table_name] = serialize_table(model_class)
     else:

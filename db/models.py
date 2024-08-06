@@ -22,3 +22,16 @@ class Reminder(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())
     remind_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     is_sent: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class LastMessage(Base):
+    __tablename__ = "last_message"
+
+    id: Mapped[int] = mapped_column(
+        Integer, primary_key=True, autoincrement=True
+    )
+    tg_chat_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    tg_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    tg_message_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    text: Mapped[str] = mapped_column(String(4096))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.now())

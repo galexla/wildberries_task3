@@ -36,7 +36,7 @@ class CommandFilter(Filter):
 
 @router.message(CommandFilter("/start"))
 async def cmd_start(message: Message):
-    log.info("cmd_start()")
+    log.debug("cmd_start()")
     await message.answer(
         "Hi there! This is a simple reminder bot. Add it to a chat, post a "
         "message and send /ctrl 5d to post your message again 5 days later.\n"
@@ -46,7 +46,7 @@ async def cmd_start(message: Message):
 
 @router.message(CommandFilter("/ctrl"))
 async def cmd_remind(message: Message, session: AsyncSession):
-    log.info("cmd_remind()")
+    log.debug("cmd_remind()")
     try:
         command = get_bot_command(message)
         reminder_date, number, period = parse_validate_reminder_command(

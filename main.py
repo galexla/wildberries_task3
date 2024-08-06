@@ -2,7 +2,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 import commands
@@ -40,14 +40,12 @@ async def send_reminders():
 async def main():
     global bot
     bot = Bot(config.TG_API_TOKEN)
-    # bot_username = (await bot.get_me()).username
 
     engine = create_async_engine(config.DB_URL, echo=True)
     sessionmaker = async_sessionmaker(engine, expire_on_commit=False)
 
     dp = Dispatcher()
     dp.update.middleware(DbSessionMiddleware(session_pool=sessionmaker))
-    # dp.update.middleware(StripMentionMiddleware(bot_username))
     dp.include_router(commands.router)
 
     initialize_scheduler()
