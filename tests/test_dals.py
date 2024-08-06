@@ -16,9 +16,9 @@ from db.models import LastMessage, Reminder
 
 async def test_save_reminder(db_session: AsyncSession):
     message = MagicMock()
-    message.message_id = 123
-    message.chat.id = 20
-    message.from_user.id = 10
+    message.tg_message_id = 123
+    message.tg_chat_id = 20
+    message.tg_user_id = 10
     message.text = "text1"
     date = datetime.fromisoformat("2024-07-30 00:00:00")
     await save_reminder(db_session, message, date)
@@ -42,16 +42,16 @@ async def test_save_reminder(db_session: AsyncSession):
 
 
 async def test_get_reminders_after_date(db_session: AsyncSession):
-    date = datetime.fromisoformat("2024-08-04 21:00:00")
+    date = datetime.fromisoformat("2024-08-05 08:23:00")
     reminders = await get_reminders_before_date(db_session, date)
     assert len(reminders) == 2
-    assert reminders[0].id == 2
+    assert reminders[0].id == 1
     assert reminders[0].remind_at == datetime.fromisoformat(
-        "2024-08-05 08:22:00"
+        "2024-08-04 20:22:00"
     )
-    assert reminders[1].id == 3
+    assert reminders[1].id == 2
     assert reminders[1].remind_at == datetime.fromisoformat(
-        "2024-08-05 10:22:00"
+        "2024-08-05 08:22:00"
     )
 
 

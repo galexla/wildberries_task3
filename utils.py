@@ -9,7 +9,7 @@ class ValidationError(Exception):
     pass
 
 
-def parse_validate_reminder_command(text: str) -> datetime:
+def parse_validate_reminder_command(text: str) -> tuple[datetime, int, str]:
     number, period = parse_reminder_command(text)
     reminder_date = calc_reminder_date(
         datetime.now(timezone.utc), number, period
@@ -20,7 +20,7 @@ def parse_validate_reminder_command(text: str) -> datetime:
 
 def parse_reminder_command(text: str) -> tuple[int, str]:
     text = text.strip().lower()
-    text = text[5:].strip()
+    text = text[6:].strip()
 
     if not 2 <= len(text) <= 6:
         raise ValidationError
