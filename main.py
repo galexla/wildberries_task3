@@ -53,12 +53,6 @@ async def main():
     if not scheduler.get_job(job_id):
         scheduler.add_job(send_reminders, "interval", seconds=10, id=job_id)
 
-    # @dp.message()
-    # async def handle_message(message: types.Message):
-    #     log.info(
-    #         f"Received message: {message.text} from {message.from_user.id}"
-    #     )
-
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
 

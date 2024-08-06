@@ -61,7 +61,9 @@ async def add_message_keep_last_two(
         await session.flush()
         await session.refresh(instance)
 
-        ids = [instance.id, last_message.id]
+        ids = [instance.id]
+        if last_message is not None:
+            ids.append(last_message.id)
 
         stmt = delete(LastMessage).where(
             LastMessage.tg_chat_id == message.chat.id,

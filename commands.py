@@ -6,7 +6,7 @@ from aiogram.types import Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import config
-from db.dals import save_reminder
+from db.dals import add_message_keep_last_two, save_reminder
 from utils import (
     ValidationError,
     get_bot_command,
@@ -79,5 +79,5 @@ async def cmd_remind(message: Message, session: AsyncSession):
 
 
 @router.message()
-async def msg(message: Message):
-    log.info("### %s", message.text)
+async def msg(message: Message, session: AsyncSession):
+    await add_message_keep_last_two(session, message)
