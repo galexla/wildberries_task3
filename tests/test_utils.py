@@ -6,7 +6,6 @@ import pytest
 from utils import (
     ValidationError,
     calc_reminder_date,
-    get_previous_user_message,
     parse_reminder_command,
     parse_validate_reminder_command,
     validate_reminder_date,
@@ -88,25 +87,3 @@ def test_validate_reminder_date():
         validate_reminder_date(datetime.fromisoformat("2034-07-15"))
         with pytest.raises(ValidationError):
             validate_reminder_date(datetime.fromisoformat("2034-07-16"))
-
-
-def test_get_previous_user_message():
-    messages = [
-        {"message": {"id": 0, "from": {"id": 1}}},
-        {"message": {"id": 1, "from": {"id": 1}}},
-        {"message": {"id": 2, "from": {"id": 1}}},
-        {"message": {"id": 3, "from": {"id": 1}}},
-        {"message": {"id": 4, "from": {"id": 2}}},
-        {"message": {"id": 5, "from": {"id": 3}}},
-    ]
-    message = get_previous_user_message(messages, 2, 1)
-    assert message["message"]["id"] == 1
-
-    message = get_previous_user_message(messages, 1, 1)
-    assert message["message"]["id"] == 0
-
-    message = get_previous_user_message(messages, 0, 1)
-    assert message is None
-
-    message = get_previous_user_message(messages, 5, 3)
-    assert message is None

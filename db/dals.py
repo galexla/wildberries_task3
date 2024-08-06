@@ -27,7 +27,7 @@ async def get_reminders_before_date(session: AsyncSession, date: datetime):
         Reminder.remind_at <= date, Reminder.is_sent == False
     )
     result = await session.execute(stmt)
-    reminders = result.scalars().all()
+    reminders = result.scalars().fetchall()
     return reminders
 
 
